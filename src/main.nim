@@ -1,3 +1,4 @@
+import os
 import nimgl/imgui, nimgl/imgui/[impl_opengl, impl_glfw]
 import nimgl/[opengl, glfw]
 import std/osproc
@@ -86,8 +87,6 @@ proc main() =
   if w == nil:
     quit(-1)
 
-  
-
   w.makeContextCurrent()
 
   doAssert glInit()
@@ -98,9 +97,11 @@ proc main() =
   doAssert igGlfwInitForOpenGL(w, true)
   doAssert igOpenGL3Init()
 
-  var show_demo: bool = false
-  if show_demo:
-    w.setWindowAttrib(GLFWResizable, GLFWTrue)
+  var show_demo: bool
+  if paramCount() >= 2:
+    if paramStr(2) == "--demo":
+      show_demo = true
+      w.setWindowAttrib(GLFWResizable, GLFWTrue)
 
   while not w.windowShouldClose:
     glfwPollEvents()
