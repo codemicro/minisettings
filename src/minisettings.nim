@@ -28,17 +28,20 @@ template redButton(buttonCode: untyped): untyped =
 
   igPopStyleColor(3)
 
+proc setNextWindowCenter() =
+  let center = igGetMainViewport().getCenter()
+  igSetNextWindowPos(center, ImGuiCond.Appearing, ImVec2(x: 0.5'f32, y: 0.5'f32))
+
 proc okCancelPopup(title, message: string): ptr bool =
   var
     o: bool = false
     selected: bool = false
 
-  let center = igGetMainViewport().getCenter()
-  igSetNextWindowPos(center, ImGuiCond.Appearing, ImVec2(x: 0.5'f32, y: 0.5'f32))
+  setNextWindowCenter()
 
   if igBeginPopupModal(title, nil, ImGuiWindowFlags.AlwaysAutoResize):
     igText(message)
-    igSeparator()
+    igSpacing()
 
     redButton():
       if igButton("OK", ImVec2(x: 150, y: 0)):
@@ -61,6 +64,15 @@ proc okCancelPopup(title, message: string): ptr bool =
 
   return o.addr
 
+proc messagePopup(title, message: string) =
+  setNextWindowCenter()
+  if igBeginPopupModal(title, nil, ImGuiWindowFlags.AlwaysAutoResize):
+    igText(message)
+    igSpacing()
+    if igButton("OK", ImVec2(x: 300, y: 0)):
+      igCloseCurrentPopup()
+    igEndPopup()
+
 proc main() =
   doAssert glfwInit()
 
@@ -74,7 +86,7 @@ proc main() =
   if w == nil:
     quit(-1)
 
-  w.setWindowAttrib(GLFWResizable, GLFWTrue)
+  
 
   w.makeContextCurrent()
 
@@ -87,6 +99,8 @@ proc main() =
   doAssert igOpenGL3Init()
 
   var show_demo: bool = false
+  if show_demo:
+    w.setWindowAttrib(GLFWResizable, GLFWTrue)
 
   while not w.windowShouldClose:
     glfwPollEvents()
@@ -109,7 +123,7 @@ proc main() =
             debugEcho("Shutdown button clicked")
             igOpenPopup("Shutdown?")
 
-        let res = okCancelPopup("Shutdown?", "Are you sure you want to shutdown?\n\n")
+        let res = okCancelPopup("Shutdown?", "Are you sure you want to shutdown?")
         if not res.isNil:
           if res[]:
             debugEcho("yes")
@@ -120,11 +134,15 @@ proc main() =
       if igBeginTabItem("Displays"):
         if igButton("Set Monitor Single"):
           if execCmd("/home/akp/scripts/setMonitors.sh single") != 0:
-            debugEcho("Command failed")
+            igOpenPopup("Command failed")
 
         if igButton("Set Monitor Left"):
           if execCmd("/home/akp/scripts/setMonitors.sh left") != 0:
-            debugEcho("Command failed")
+            igOpenPopup("Command failed")
+          igOpenPopup("Command failed")
+
+        messagePopup("Command failed", "Command returned with a non-zero exit code.")
+
         igEndTabItem()
 
       igEndTabBar()
