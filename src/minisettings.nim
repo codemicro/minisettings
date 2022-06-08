@@ -1,5 +1,6 @@
 import nimgl/imgui, nimgl/imgui/[impl_opengl, impl_glfw]
 import nimgl/[opengl, glfw]
+import std/osproc
 
 func `or`(x: ImGuiWindowFlags, y: ImGuiWindowFlags): ImGuiWindowFlags = (x.int32 or y.int32).ImGuiWindowFlags
 
@@ -32,8 +33,11 @@ proc okCancelPopup(title, message: string): ptr bool =
     o: bool = false
     selected: bool = false
 
-  if igBeginPopupModal("Shutdown?", nil, ImGuiWindowFlags.AlwaysAutoResize):
-    igText("Are you sure you want to shutdown?\n\n")
+  let center = igGetMainViewport().getCenter()
+  igSetNextWindowPos(center, ImGuiCond.Appearing, ImVec2(x: 0.5'f32, y: 0.5'f32))
+
+  if igBeginPopupModal(title, nil, ImGuiWindowFlags.AlwaysAutoResize):
+    igText(message)
     igSeparator()
 
     redButton():
@@ -66,7 +70,7 @@ proc main() =
   glfwWindowHint(GLFWOpenglProfile, GLFW_OPENGL_CORE_PROFILE)
   glfwWindowHint(GLFWResizable, GLFW_FALSE)
 
-  var w: GLFWWindow = glfwCreateWindow(400, 300)
+  var w: GLFWWindow = glfwCreateWindow(400, 300, cstring("Minisettings"))
   if w == nil:
     quit(-1)
 
@@ -97,23 +101,33 @@ proc main() =
 
     var p_open = false
     igBegin(cstring("fullscreen"), p_open.addr, ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.NoMove or ImGuiWindowFlags.NoSavedSettings)
-    
-    igText("Minisettings")
 
-    redButton():
-      if igButton("Shutdown"):
-        debugEcho("Shutdown button clicked")
-        igOpenPopup("Shutdown?")
+    if igBeginTabBar("MainTabBar", ImGuiTabBarFlags.None):
+      if igBeginTabItem("Power"):
+        redButton():
+          if igButton("Shutdown", ImVec2(x: 100, y: 30)):
+            debugEcho("Shutdown button clicked")
+            igOpenPopup("Shutdown?")
 
-    let center = igGetMainViewport().getCenter()
-    igSetNextWindowPos(center, ImGuiCond.Appearing, ImVec2(x: 0.5'f32, y: 0.5'f32))
+        let res = okCancelPopup("Shutdown?", "Are you sure you want to shutdown?\n\n")
+        if not res.isNil:
+          if res[]:
+            debugEcho("yes")
+          else:
+            debugEcho("no")
+        igEndTabItem()
+      
+      if igBeginTabItem("Displays"):
+        if igButton("Set Monitor Single"):
+          if execCmd("/home/akp/scripts/setMonitors.sh single") != 0:
+            debugEcho("Command failed")
 
-    var res = okCancelPopup("Shutdown?", "Are you sure you want to shutdown?")
-    if not res.isNil:
-      if res[]:
-        debugEcho("yes")
-      else:
-        debugEcho("no")
+        if igButton("Set Monitor Left"):
+          if execCmd("/home/akp/scripts/setMonitors.sh left") != 0:
+            debugEcho("Command failed")
+        igEndTabItem()
+
+      igEndTabBar()
 
     igEnd()
 
