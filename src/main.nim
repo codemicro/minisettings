@@ -98,8 +98,8 @@ proc main() =
   doAssert igOpenGL3Init()
 
   var show_demo: bool
-  if paramCount() >= 2:
-    if paramStr(2) == "--demo":
+  if paramCount() >= 1:
+    if paramStr(1) == "demo":
       show_demo = true
       w.setWindowAttrib(GLFWResizable, GLFWTrue)
 
@@ -131,8 +131,33 @@ proc main() =
           else:
             debugEcho("no")
         igEndTabItem()
-      
+
       if igBeginTabItem("Displays"):
+
+        var initial_pos: ImVec2
+        igGetCursorPosNonUDT(initial_pos.addr)
+
+        let
+          button_size = ImVec2(x: 50, y: 25)
+          padding = 5'f32
+
+        igSetCursorPos(ImVec2(x: initial_pos.x, y: initial_pos.y + padding + button_size.y))
+        igButton("Left", buttonSize)
+
+        igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x, y: initial_pos.y))
+        igButton("Above", buttonSize)
+
+        igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x, y: initial_pos.y + padding + button_size.y))
+        igButton("Single", buttonSize)
+
+        igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x, y: initial_pos.y + (2 * (padding + button_size.y))))
+        igButton("Below", buttonSize)
+
+        igSetCursorPos(ImVec2(x: initial_pos.x + (2 * (padding + button_size.x)), y: initial_pos.y + padding + button_size.y))
+        igButton("Right", buttonSize)
+
+        igSetCursorPos(ImVec2(x: initial_pos.x, y: initial_pos.y + (3 * (padding + button_size.y))))
+
         if igButton("Set Monitor Single"):
           if execCmd("/home/akp/scripts/setMonitors.sh single") != 0:
             igOpenPopup("Command failed")
@@ -140,7 +165,6 @@ proc main() =
         if igButton("Set Monitor Left"):
           if execCmd("/home/akp/scripts/setMonitors.sh left") != 0:
             igOpenPopup("Command failed")
-          igOpenPopup("Command failed")
 
         messagePopup("Command failed", "Command returned with a non-zero exit code.")
 
