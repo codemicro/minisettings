@@ -1,7 +1,6 @@
-import os
 import nimgl/imgui, nimgl/imgui/[impl_opengl, impl_glfw]
 import nimgl/[opengl, glfw]
-import std/osproc
+import std/[os, osproc]
 
 const
   WindowWidth = 400
@@ -38,15 +37,28 @@ template redButton(buttonCode: untyped): untyped =
 
 template yellowButton(buttonCode: untyped): untyped =
   colouredButton(0.1, buttonCode)
- 
+
+const cmdExitCode {.intdefine.} = 0
+
+when not defined(release):
+  proc runCommand(command: string): int =
+    debugEcho("[CMD] " & command)
+    return cmdExitCode
+else:
+  proc runCommand(command: string): int =
+    let ec = execCmd(command)
+    return ec
+
+template runMonitorMoveCommand(location: string) =
+  if runCommand("/home/akp/scripts/setMonitors.sh " & location) != 0:
+    igOpenPopup("Command failed")
+
 proc setNextWindowCenter() =
   let center = igGetMainViewport().getCenter()
   igSetNextWindowPos(center, ImGuiCond.Appearing, ImVec2(x: 0.5'f32, y: 0.5'f32))
 
-proc okCancelPopup(title, message: string): ptr bool =
-  var
-    o: bool = false
-    selected: bool = false
+proc okCancelPopup(title, message: string): bool =
+  var selected: bool = false
 
   setNextWindowCenter()
 
@@ -56,7 +68,6 @@ proc okCancelPopup(title, message: string): ptr bool =
 
     redButton():
       if igButton("OK", ImVec2(x: 150, y: 0)):
-        o = true
         selected = true
         igCloseCurrentPopup()
 
@@ -64,16 +75,12 @@ proc okCancelPopup(title, message: string): ptr bool =
     igSameLine()
 
     if igButton("Cancel", ImVec2(x: 150, y: 0)):
-      o = false
-      selected = true
+      selected = false
       igCloseCurrentPopup()
 
     igEndPopup()
 
-  if not selected:
-    return nil
-
-  return o.addr
+  return selected
 
 proc messagePopup(title, message: string) =
   setNextWindowCenter()
@@ -83,6 +90,9 @@ proc messagePopup(title, message: string) =
     if igButton("OK", ImVec2(x: 300, y: 0)):
       igCloseCurrentPopup()
     igEndPopup()
+
+template commandFailedPopup(): untyped =
+  messagePopup("Command failed", "Command returned with a non-zero exit code.")
 
 proc main() =
   doAssert glfwInit()
@@ -129,17 +139,41 @@ proc main() =
 
     if igBeginTabBar("MainTabBar", ImGuiTabBarFlags.None):
       if igBeginTabItem("Power"):
+        let button_size = ImVec2(x: (WindowWidth - 35) / 3, y: 30)
+
         redButton():
-          if igButton("Shutdown", ImVec2(x: 100, y: 30)):
-            debugEcho("Shutdown button clicked")
+          if igButton("Shutdown", button_size):
             igOpenPopup("Shutdown?")
 
-        let res = okCancelPopup("Shutdown?", "Are you sure you want to shutdown?")
-        if not res.isNil:
-          if res[]:
-            debugEcho("yes")
+        yellowButton:
+          igSameLine()
+          if igButton("Sleep", buttonSize):
+            igOpenPopup("Sleep?")
+
+          igSameLine()
+          if igButton("Restart", button_size):
+            igOpenPopup("Restart?")
+
+        if okCancelPopup("Shutdown?", "Are you sure you want to shutdown?"):
+          if runCommand("systemctl poweroff") != 0:
+            igOpenPopup("Command failed")
           else:
-            debugEcho("no")
+            w.setWindowShouldClose(true)
+
+        if okCancelPopup("Restart?", "Are you sure you want to restart?"):
+          if runCommand("systemctl reboot") != 0:
+            igOpenPopup("Command failed")
+          else:
+            w.setWindowShouldClose(true)
+
+        if okCancelPopup("Sleep?", "Are you sure you want to sleep?"):
+          if runCommand("systemctl suspend") != 0:
+            igOpenPopup("Command failed")
+          else:
+            w.setWindowShouldClose(true)
+
+        commandFailedPopup()
+
         igEndTabItem()
 
       if igBeginTabItem("Displays"):
@@ -154,32 +188,29 @@ proc main() =
           padding = 5'f32
 
         igSetCursorPos(ImVec2(x: initial_pos.x, y: initial_pos.y + padding + button_size.y))
-        igButton("Left", buttonSize)
+        if igButton("Left", buttonSize):
+          runMonitorMoveCommand("left")
 
         igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x, y: initial_pos.y))
-        igButton("Above", buttonSize)
+        if igButton("Above", buttonSize):
+          runMonitorMoveCommand("above")
 
         igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x, y: initial_pos.y + padding + button_size.y))
         yellowButton():
-          igButton("Single", buttonSize)
+          if igButton("Single", buttonSize):
+            runMonitorMoveCommand("single")
 
         igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x, y: initial_pos.y + (2 * (padding + button_size.y))))
-        igButton("Below", buttonSize)
+        if igButton("Below", buttonSize):
+          runMonitorMoveCommand("below")
 
         igSetCursorPos(ImVec2(x: initial_pos.x + (2 * (padding + button_size.x)), y: initial_pos.y + padding + button_size.y))
-        igButton("Right", buttonSize)
+        if igButton("Right", buttonSize):
+          runMonitorMoveCommand("right")
 
         igSetCursorPos(ImVec2(x: initial_pos.x, y: initial_pos.y + (3 * (padding + button_size.y))))
 
-        # if igButton("Set Monitor Single"):
-        #   if execCmd("/home/akp/scripts/setMonitors.sh single") != 0:
-        #     igOpenPopup("Command failed")
-
-        # if igButton("Set Monitor Left"):
-        #   if execCmd("/home/akp/scripts/setMonitors.sh left") != 0:
-        #     igOpenPopup("Command failed")
-
-        messagePopup("Command failed", "Command returned with a non-zero exit code.")
+        commandFailedPopup()
 
         igEndTabItem()
 
