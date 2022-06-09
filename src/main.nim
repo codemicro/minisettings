@@ -3,6 +3,10 @@ import nimgl/imgui, nimgl/imgui/[impl_opengl, impl_glfw]
 import nimgl/[opengl, glfw]
 import std/osproc
 
+const
+  WindowWidth = 400
+  WindowHeight = 300
+
 func `or`(x: ImGuiWindowFlags, y: ImGuiWindowFlags): ImGuiWindowFlags = (x.int32 or y.int32).ImGuiWindowFlags
 
 func newImColorFromHSV(h, s, v: float32): ImColor =
@@ -20,15 +24,21 @@ func getCenter(vp: ptr ImGuiViewport): ImVec2 =
     y: vp.pos.y + (vp.size.y * 0.5'f32)
   )
 
-template redButton(buttonCode: untyped): untyped =
-  igPushStyleColor(ImGuiCol.Button, newImColorFromHSV(0'f32, 0.6'f32, 0.6'f32).value)
-  igPushStyleColor(ImGuiCol.ButtonHovered, newImColorFromHSV(0'f32, 0.7'f32, 0.7'f32).value)
-  igPushStyleColor(ImGuiCol.ButtonActive, newImColorFromHSV(0'f32, 0.8'f32, 0.8'f32).value)
+template colouredButton(hue: float32, buttonCode: untyped): untyped =
+  igPushStyleColor(ImGuiCol.Button, newImColorFromHSV(hue, 0.6'f32, 0.6'f32).value)
+  igPushStyleColor(ImGuiCol.ButtonHovered, newImColorFromHSV(hue, 0.7'f32, 0.7'f32).value)
+  igPushStyleColor(ImGuiCol.ButtonActive, newImColorFromHSV(hue, 0.8'f32, 0.8'f32).value)
 
   buttonCode
 
   igPopStyleColor(3)
 
+template redButton(buttonCode: untyped): untyped =
+  colouredButton(0, buttonCode)
+
+template yellowButton(buttonCode: untyped): untyped =
+  colouredButton(0.1, buttonCode)
+ 
 proc setNextWindowCenter() =
   let center = igGetMainViewport().getCenter()
   igSetNextWindowPos(center, ImGuiCond.Appearing, ImVec2(x: 0.5'f32, y: 0.5'f32))
@@ -83,7 +93,7 @@ proc main() =
   glfwWindowHint(GLFWOpenglProfile, GLFW_OPENGL_CORE_PROFILE)
   glfwWindowHint(GLFWResizable, GLFW_FALSE)
 
-  var w: GLFWWindow = glfwCreateWindow(400, 300, cstring("Minisettings"))
+  var w: GLFWWindow = glfwCreateWindow(WindowWidth, WindowHeight, cstring("Minisettings"))
   if w == nil:
     quit(-1)
 
@@ -134,6 +144,8 @@ proc main() =
 
       if igBeginTabItem("Displays"):
 
+        igText("Set second monitor position")
+
         var initial_pos: ImVec2
         igGetCursorPosNonUDT(initial_pos.addr)
 
@@ -148,7 +160,8 @@ proc main() =
         igButton("Above", buttonSize)
 
         igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x, y: initial_pos.y + padding + button_size.y))
-        igButton("Single", buttonSize)
+        yellowButton():
+          igButton("Single", buttonSize)
 
         igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x, y: initial_pos.y + (2 * (padding + button_size.y))))
         igButton("Below", buttonSize)
@@ -172,7 +185,12 @@ proc main() =
 
       igEndTabBar()
 
-    igEnd()
+    let button_size = ImVec2(x: WindowWidth - 16, y: 20)
+    igSetCursorPosY(WindowHeight - button_size.y - 10)
+    if igButton("Close", button_size):
+      w.setWindowShouldClose(true)
+
+    igEnd() # fullscreen window
 
     if show_demo:
       igShowDemoWindow(show_demo.addr)
