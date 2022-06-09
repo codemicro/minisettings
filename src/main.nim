@@ -211,7 +211,7 @@ proc drawUI(w: GLFWWindow) =
   igGetWindowSizeNonUDT(window_size.addr)
   igGetWindowPosNonUDT(window_pos.addr)
 
-  let button_size = ImVec2(x: getContentRegionAvail().x, y: 20)
+  let button_size = ImVec2(x: getContentRegionAvail().x, y: 30)
 
   igSetCursorPosY(window_pos.y + (window_size.y - button_size.y - 10))
   if igButton("Close", button_size):
