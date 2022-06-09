@@ -6,27 +6,31 @@ const
   WindowWidth = 400
   WindowHeight = 200
 
-func `or`(x: ImGuiWindowFlags, y: ImGuiWindowFlags): ImGuiWindowFlags = (x.int32 or y.int32).ImGuiWindowFlags
+func `or`(x: ImGuiWindowFlags, y: ImGuiWindowFlags): ImGuiWindowFlags = (
+  x.int32 or y.int32).ImGuiWindowFlags
 
 func newImColorFromHSV(h, s, v: float32): ImColor =
   var r: float32
-  var g: float32 
+  var g: float32
   var b: float32
-  
+
   igColorConvertHSVtoRGB(h, s, v, r.addr, g.addr, b.addr)
 
   return ImColor(value: ImVec4(x: r, y: g, z: b, w: 1.0'f32))
 
-func getCenter(vp: ptr ImGuiViewport): ImVec2 = 
+func getCenter(vp: ptr ImGuiViewport): ImVec2 =
   ImVec2(
-    x: vp.pos.x + (vp.size.x * 0.5'f32), 
+    x: vp.pos.x + (vp.size.x * 0.5'f32),
     y: vp.pos.y + (vp.size.y * 0.5'f32)
   )
 
 template colouredButton(hue: float32, buttonCode: untyped): untyped =
-  igPushStyleColor(ImGuiCol.Button, newImColorFromHSV(hue, 0.6'f32, 0.6'f32).value)
-  igPushStyleColor(ImGuiCol.ButtonHovered, newImColorFromHSV(hue, 0.7'f32, 0.7'f32).value)
-  igPushStyleColor(ImGuiCol.ButtonActive, newImColorFromHSV(hue, 0.8'f32, 0.8'f32).value)
+  igPushStyleColor(ImGuiCol.Button, newImColorFromHSV(hue, 0.6'f32,
+      0.6'f32).value)
+  igPushStyleColor(ImGuiCol.ButtonHovered, newImColorFromHSV(hue, 0.7'f32,
+      0.7'f32).value)
+  igPushStyleColor(ImGuiCol.ButtonActive, newImColorFromHSV(hue, 0.8'f32,
+      0.8'f32).value)
 
   buttonCode
 
@@ -135,7 +139,8 @@ proc main() =
     igSetNextWindowPos(mainViewport.workPos)
 
     var p_open = false
-    igBegin(cstring("fullscreen"), p_open.addr, ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.NoMove or ImGuiWindowFlags.NoSavedSettings)
+    igBegin(cstring("fullscreen"), p_open.addr, ImGuiWindowFlags.NoDecoration or
+        ImGuiWindowFlags.NoMove or ImGuiWindowFlags.NoSavedSettings)
 
     if igBeginTabBar("MainTabBar", ImGuiTabBarFlags.None):
       if igBeginTabItem("Power"):
@@ -187,28 +192,34 @@ proc main() =
           button_size = ImVec2(x: 50, y: 25)
           padding = 5'f32
 
-        igSetCursorPos(ImVec2(x: initial_pos.x, y: initial_pos.y + padding + button_size.y))
+        igSetCursorPos(ImVec2(x: initial_pos.x, y: initial_pos.y + padding +
+            button_size.y))
         if igButton("Left", buttonSize):
           runMonitorMoveCommand("left")
 
-        igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x, y: initial_pos.y))
+        igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x,
+            y: initial_pos.y))
         if igButton("Above", buttonSize):
           runMonitorMoveCommand("above")
 
-        igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x, y: initial_pos.y + padding + button_size.y))
+        igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x,
+            y: initial_pos.y + padding + button_size.y))
         yellowButton():
           if igButton("Single", buttonSize):
             runMonitorMoveCommand("single")
 
-        igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x, y: initial_pos.y + (2 * (padding + button_size.y))))
+        igSetCursorPos(ImVec2(x: initial_pos.x + padding + button_size.x,
+            y: initial_pos.y + (2 * (padding + button_size.y))))
         if igButton("Below", buttonSize):
           runMonitorMoveCommand("below")
 
-        igSetCursorPos(ImVec2(x: initial_pos.x + (2 * (padding + button_size.x)), y: initial_pos.y + padding + button_size.y))
+        igSetCursorPos(ImVec2(x: initial_pos.x + (2 * (padding +
+            button_size.x)), y: initial_pos.y + padding + button_size.y))
         if igButton("Right", buttonSize):
           runMonitorMoveCommand("right")
 
-        igSetCursorPos(ImVec2(x: initial_pos.x, y: initial_pos.y + (3 * (padding + button_size.y))))
+        igSetCursorPos(ImVec2(x: initial_pos.x, y: initial_pos.y + (3 * (
+            padding + button_size.y))))
 
         commandFailedPopup()
 
