@@ -57,6 +57,7 @@ else:
     return execCmd(command)
 
 template runMonitorMoveCommand(location: string) =
+  # TODO: Don't hardcode this
   if runCommand("/home/akp/scripts/setMonitors.sh " & location) != 0:
     igOpenPopup("Command failed")
 
