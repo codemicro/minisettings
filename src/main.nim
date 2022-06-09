@@ -5,7 +5,7 @@ import std/osproc
 
 const
   WindowWidth = 400
-  WindowHeight = 300
+  WindowHeight = 200
 
 func `or`(x: ImGuiWindowFlags, y: ImGuiWindowFlags): ImGuiWindowFlags = (x.int32 or y.int32).ImGuiWindowFlags
 
@@ -171,13 +171,13 @@ proc main() =
 
         igSetCursorPos(ImVec2(x: initial_pos.x, y: initial_pos.y + (3 * (padding + button_size.y))))
 
-        if igButton("Set Monitor Single"):
-          if execCmd("/home/akp/scripts/setMonitors.sh single") != 0:
-            igOpenPopup("Command failed")
+        # if igButton("Set Monitor Single"):
+        #   if execCmd("/home/akp/scripts/setMonitors.sh single") != 0:
+        #     igOpenPopup("Command failed")
 
-        if igButton("Set Monitor Left"):
-          if execCmd("/home/akp/scripts/setMonitors.sh left") != 0:
-            igOpenPopup("Command failed")
+        # if igButton("Set Monitor Left"):
+        #   if execCmd("/home/akp/scripts/setMonitors.sh left") != 0:
+        #     igOpenPopup("Command failed")
 
         messagePopup("Command failed", "Command returned with a non-zero exit code.")
 
