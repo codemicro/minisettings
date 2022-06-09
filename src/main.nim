@@ -60,6 +60,8 @@ template runMonitorMoveCommand(location: string) =
   # TODO: Don't hardcode this
   if runCommand("/home/akp/scripts/setMonitors.sh " & location) != 0:
     igOpenPopup("Command failed")
+  else:
+    igOpenPopup("Done")
 
 proc setNextWindowCenter() =
   let center = igGetMainViewport().getCenter()
@@ -105,6 +107,9 @@ proc messagePopup(title, message: string) =
 
 template commandFailedPopup(): untyped =
   messagePopup("Command failed", "Command returned with a non-zero exit code.")
+
+template donePopup(): untyped =
+  messagePopup("Done", "Success!")
 
 proc close(w: GLFWWindow) =
   w.setWindowShouldClose(true)
@@ -196,6 +201,7 @@ proc drawUI(w: GLFWWindow) =
           padding + button_size.y))))
 
       commandFailedPopup()
+      donePopup()
 
       igEndTabItem()
 
