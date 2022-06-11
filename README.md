@@ -1,6 +1,6 @@
 # minisettings
 
-*An application for administering quick-access settings from the tray*
+*An application for Linux for administering quick-access settings from the tray*
 
 ---
 
