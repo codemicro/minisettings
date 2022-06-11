@@ -118,12 +118,13 @@ proc closeAndPauseAudio(w: GLFWWindow) =
   w.close()
   discard runCommand("playerctl pause")
 
+proc makeButtonSize(num_buttons, padding, y_height: int): ImVec2 =
+  return ImVec2(x: (getContentRegionAvail().x - (float32(padding) * float32(num_buttons - 1))) / float32(num_buttons), y: float32(y_height))
+
 proc drawUI(w: GLFWWindow) =
   if igBeginTabBar("MainTabBar", ImGuiTabBarFlags.None):
     if igBeginTabItem("Power"):
-      let
-        padding = 8
-        button_size = ImVec2(x: (getContentRegionAvail().x - float32(padding * 2)) / 3, y: 30)
+      let button_size = makeButtonSize(3, 8, 30)
 
       redButton():
         if igButton("Shutdown", button_size):
@@ -199,6 +200,33 @@ proc drawUI(w: GLFWWindow) =
 
       igSetCursorPos(ImVec2(x: initial_pos.x, y: initial_pos.y + (3 * (
           padding + button_size.y))))
+
+      commandFailedPopup()
+      donePopup()
+
+      igEndTabItem()
+
+    if igBeginTabItem("i3"):
+
+      let button_size = makeButtonSize(2, 8, 30)
+
+      redButton:
+        if igButton("Quit", button_size):
+          igOpenPopup("Quit")
+
+      if okCancelPopup("Quit", "Are you sure you want to quit i3?"):
+        if runCommand("i3-msg exit") != 0:
+          igOpenPopup("Command failed")
+        else:
+          w.closeAndPauseAudio()
+
+      yellowButton:
+        igSameLine()
+        if igButton("Restart", button_size):
+          if runCommand("i3-msg restart") != 0:
+            igOpenPopup("Command failed")
+          else:
+            w.close()
 
       commandFailedPopup()
       donePopup()
