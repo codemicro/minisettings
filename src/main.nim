@@ -198,6 +198,12 @@ proc drawUI(w: GLFWWindow) =
       if igButton("Right", buttonSize):
         runMonitorMoveCommand("right")
 
+      igSetCursorPos(ImVec2(x: initial_pos.x + padding + (3 * (padding +
+          button_size.x)), y: initial_pos.y + padding + button_size.y))
+      yellowButton:
+        if igButton("Duplicated", ImVec2(x: 85, y: button_size.y)):
+          runMonitorMoveCommand("duplicate")
+
       igSetCursorPos(ImVec2(x: initial_pos.x, y: initial_pos.y + (3 * (
           padding + button_size.y))))
 
